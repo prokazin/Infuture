@@ -12,7 +12,7 @@ import Favorites from './pages/Favorites';
 import Search from './pages/Search';
 
 function App() {
-  const { tg, initDataUnsafe } = useTelegram();
+  const { tg } = useTelegram();
 
   useEffect(() => {
     if (tg) {
