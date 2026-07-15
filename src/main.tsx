@@ -3,8 +3,20 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+console.log('🚀 Application starting...');
+console.log('📱 Running in:', window.Telegram ? 'Telegram' : 'Browser');
+console.log('🌐 URL:', window.location.href);
+
+const rootElement = document.getElementById('root');
+console.log('📦 Root element:', rootElement);
+
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+  console.log('✅ App rendered');
+} else {
+  console.error('❌ Root element not found!');
+}
