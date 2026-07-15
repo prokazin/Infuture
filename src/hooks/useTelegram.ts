@@ -12,8 +12,6 @@ interface TelegramUser {
   last_name?: string;
   username?: string;
   photo_url?: string;
-  auth_date: number;
-  hash: string;
 }
 
 interface TelegramWebApp {
@@ -42,38 +40,59 @@ interface TelegramWebApp {
   };
   initDataUnsafe: {
     user?: TelegramUser;
-    query_id?: string;
-    auth_date?: number;
-    hash?: string;
   };
-  themeParams: {
-    bg_color?: string;
-    secondary_bg_color?: string;
-    text_color?: string;
-    hint_color?: string;
-    link_color?: string;
-    button_color?: string;
-    button_text_color?: string;
-    header_bg_color?: string;
-  };
-  colorScheme: 'dark' | 'light';
 }
 
 export const useTelegram = () => {
   const [tg, setTg] = useState<TelegramWebApp | null>(null);
-  const [initDataUnsafe, setInitDataUnsafe] = useState<TelegramWebApp['initDataUnsafe']>({});
   const [user, setUser] = useState<TelegramUser | null>(null);
-  const [themeParams, setThemeParams] = useState<TelegramWebApp['themeParams']>({});
-  const [colorScheme, setColorScheme] = useState<'dark' | 'light'>('dark');
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const telegram = window.Telegram?.WebApp;
+    console.log('🔍 Checking for Telegram WebApp...');
+    
+    // Проверяем, что мы в Telegram
+    const isTelegram = window.Telegram !== undefined;
+    console.log('📱 Is Telegram environment:', isTelegram);
+    
+    if (!isTelegram) {
+      console.warn('⚠️ Not running in Telegram. Using mock data.');
+      // Создаем мок данные для разработки
+      const mockUser = {
+        id: 123456789,
+        first_name: 'Test',
+        last_name: 'User',
+        username: 'testuser',
+        photo_url: ''
+      };
+      setUser(mockUser);
+      setIsReady(true);
+      return;
+    }
+
+    const telegram = window.Telegram.WebApp;
+    console.log('📦 Telegram WebApp object:', telegram);
+    
     if (telegram) {
+      console.log('✅ Telegram WebApp found!');
+      console.log('📊 initData:', telegram.initData);
+      console.log('👤 User data:', telegram.initDataUnsafe?.user);
+      
       setTg(telegram);
-      setInitDataUnsafe(telegram.initDataUnsafe || {});
       setUser(telegram.initDataUnsafe?.user || null);
-      setThemeParams(telegram.themeParams || {});
-      setColorScheme(telegram.colorScheme || 'dark');
+      setIsReady(true);
+      
+      // Важно: вызываем ready() только если это реальный Telegram
+      try {
+        telegram.ready();
+        console.log('✅ Telegram.ready() called');
+        telegram.expand();
+        console.log('✅ Telegram.expand() called');
+      } catch (error) {
+        console.error('❌ Error calling Telegram methods:', error);
+      }
+    } else {
+      console.warn('⚠️ Telegram WebApp not available');
     }
   }, []);
 
@@ -97,10 +116,8 @@ export const useTelegram = () => {
 
   return {
     tg,
-    initDataUnsafe,
     user,
-    themeParams,
-    colorScheme,
+    isReady,
     hapticImpact,
     hapticNotification,
     hapticSelection,
