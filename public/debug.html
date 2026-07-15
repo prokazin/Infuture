@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infuture Debug</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #181818; 
+            color: white; 
+            font-family: -apple-system, Arial, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card {
+            background: rgba(42, 42, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        h1 { color: #8B5CF6; margin-bottom: 20px; }
+        .status { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success { background: #4CAF50; color: white; }
+        .badge-error { background: #f44336; color: white; }
+        .badge-warning { background: #FFA726; color: white; }
+        .badge-info { background: #8B5CF6; color: white; }
+        .label { color: #888; font-size: 13px; }
+        .value { color: white; font-size: 14px; word-break: break-all; }
+        pre {
+            background: #111;
+            padding: 12px;
+            border-radius: 8px;
+            overflow: auto;
+            font-size: 12px;
+            max-height: 200px;
+        }
+        .emoji { font-size: 24px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Infuture Debug</h1>
+        
+        <div class="card">
+            <h3 style="margin-bottom: 12px;">📱 Telegram Status</h3>
+            <div class="status">
+                <span>Telegram WebApp:</span>
+                <span id="tgStatus" class="badge badge-warning">Проверка...</span>
+            </div>
+            <div class="status">
+                <span>User:</span>
+                <span id="userStatus" class="badge badge-warning">Нет данных</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 12px;">👤 User Info</h3>
+            <div id="userInfo">
+                <p class="label">Данные не загружены</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 12px;">🌐 Page Info</h3>
+            <p class="label">URL:</p>
+            <p class="value" id="pageUrl"></p>
+            <p class="label" style="margin-top: 8px;">User Agent:</p>
+            <p class="value" id="userAgent" style="font-size: 11px;"></p>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 12px;">📋 Init Data</h3>
+            <pre id="initData">Нет данных</pre>
+        </div>
+
+        <div class="card">
+            <button onclick="window.location.reload()" style="
+                background: #8B5CF6;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 12px;
+                font-size: 16px;
+                cursor: pointer;
+                width: 100%;
+            ">
+                🔄 Перезагрузить
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const tgStatus = document.getElementById('tgStatus');
+            const userStatus = document.getElementById('userStatus');
+            const userInfo = document.getElementById('userInfo');
+            const pageUrl = document.getElementById('pageUrl');
+            const userAgent = document.getElementById('userAgent');
+            const initData = document.getElementById('initData');
+
+            pageUrl.textContent = window.location.href;
+            userAgent.textContent = navigator.userAgent;
+
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tgStatus.textContent = '✅ Доступен';
+                tgStatus.className = 'badge badge-success';
+                
+                // Вызываем методы
+                try {
+                    tg.ready();
+                    tg.expand();
+                } catch(e) {}
+
+                const user = tg.initDataUnsafe?.user;
+                if (user) {
+                    userStatus.textContent = `✅ ${user.first_name}`;
+                    userStatus.className = 'badge badge-success';
+                    
+                    userInfo.innerHTML = `
+                        <p><span class="label">ID:</span> <span class="value">${user.id}</span></p>
+                        <p><span class="label">Имя:</span> <span class="value">${user.first_name}</span></p>
+                        <p><span class="label">Фамилия:</span> <span class="value">${user.last_name || '—'}</span></p>
+                        <p><span class="label">Username:</span> <span class="value">@${user.username || '—'}</span></p>
+                    `;
+                } else {
+                    userStatus.textContent = '❌ Нет данных';
+                    userStatus.className = 'badge badge-error';
+                    userInfo.innerHTML = '<p class="label">Пользователь не авторизован</p>';
+                }
+
+                initData.textContent = tg.initData || 'Нет данных';
+            } else {
+                tgStatus.textContent = '❌ Не доступен';
+                tgStatus.className = 'badge badge-error';
+                userStatus.textContent = '❌ Не в Telegram';
+                userStatus.className = 'badge badge-error';
+                userInfo.innerHTML = '<p class="label">Откройте приложение через Telegram</p>';
+                initData.textContent = 'Не в Telegram окружении';
+            }
+        }
+
+        // Обновляем при загрузке
+        updateStatus();
+
+        // Обновляем каждые 2 секунды
+        setInterval(updateStatus, 2000);
+    </script>
+</body>
+</html>
